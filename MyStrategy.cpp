@@ -25,15 +25,8 @@ void MyStrategy::move(const Hockeyist& self, const model::World& world, const mo
     Move = &move;
     UpdateState();
 
-    // если замахнулись
-    if (Self->getSwingTicks()) {
-        if (HavePuck) { // если владеем шайбой и хорошо замахнулись - бьём
-            if (Self->getSwingTicks() > 9) {
-                Move->setAction(STRIKE);
-            }
-        } else { // если не владеем шайбой - отменяем удар
-            Move->setAction(CANCEL_STRIKE);
-        }
+    if (Self->getSwingTicks() && !HavePuck) {
+        Move->setAction(CANCEL_STRIKE);
         return;
     }
 
@@ -215,36 +208,46 @@ void MyStrategy::MakeStrike() {
     double gateDistance = fabs(EnemyGateX - Self->getX());
     double speed = sqrt(Self->getSpeedX() * Self->getSpeedX() + Self->getSpeedY() * Self->getSpeedY());
 
-    if (gateDistance > 400) {
+    if (gateDistance > 550) {
+        double gateX = EnemyGateX;
+
+        // Если далеко от ворот - едем ближе к краю (с края проще забить)
+        if (gateDistance > 600) {
+            gateY = Self->getY() > FieldCenterY ? FieldCenterY + FieldWidth / 2 : FieldCenterY - FieldWidth / 2;
+            gateX = EnemyGateX > FieldCenterX ? EnemyGateX - 400 : EnemyGateX + 400;
+        }
+
+        // Если подъезжаем - нацеливаемся на центр ворот
         gateY = Self->getY() > FieldCenterY ? FieldCenterY + 110 : FieldCenterY - 110;
 
-        double gateAngle = GetAngle(Self->getX(), Self->getY(), EnemyGateX, gateY);
+        double gateAngle = GetAngle(Self->getX(), Self->getY(), gateX, gateY);
         double minAngle = GetAngle(Self->getAngle(), gateAngle);
 
         if (fabs(minAngle) < 0.9) {
-            if (gateDistance < 0.45 * FieldWidth && speed > 3.0) {
-                Move->setSpeedUp(-1.0); // тормозим при подлете к зоне удара
-            } else {
-                Move->setSpeedUp(1.0);
-            }
+            Move->setSpeedUp(1.0);
         }
         Move->setTurn(minAngle);
 
     } else {
+
+        // по прежнему едем к центру
         double gateAngle = GetAngle(Self->getX(), Self->getY(), EnemyGateX, gateY);
         double minAngle = GetAngle(Self->getAngle(), gateAngle);
 
-        if (fabs(minAngle) < 0.02) {
-            if (Self->getLastActionTick() == -1 ||
-                (World->getTick() - Self->getLastActionTick()) > 10)
-            {
-                if (!EnemyGoalie) {
-                    Move->setAction(STRIKE);
-                }
+        Move->setSpeedUp(1.0);
+        Move->setTurn(minAngle);
+
+        // за 350 px замахиваемся
+        if (gateDistance < 350) {
+            if (!Self->getSwingTicks()) {
                 Move->setAction(SWING);
+                return;
             }
-        } else {
-            Move->setTurn(minAngle);
+        }
+
+        // за 300 - бьём
+        if (gateDistance < 300) {
+            Move->setAction(STRIKE);
         }
     }
 
