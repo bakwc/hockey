@@ -238,7 +238,7 @@ void MyStrategy::MakeStrike() {
         Move->setTurn(minAngle);
 
         // за 350 px замахиваемся
-        if (gateDistance < 350) {
+        if (gateDistance < 395) {
             if (!Self->getSwingTicks()) {
                 Move->setAction(SWING);
                 return;
@@ -246,7 +246,7 @@ void MyStrategy::MakeStrike() {
         }
 
         // за 300 - бьём
-        if (gateDistance < 300) {
+        if (gateDistance < 340) {
             Move->setAction(STRIKE);
         }
     }
