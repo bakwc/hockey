@@ -25,6 +25,7 @@ private:
     const model::Hockeyist* EnemyGoalie;
     const model::Hockeyist* SelfGoalie;
     const model::Hockeyist* Partner;
+    const model::Hockeyist* PuckHockeist;
     const model::Puck* Puck;
     bool HavePuck = false;
     uint16_t EnemyGateX = -1;

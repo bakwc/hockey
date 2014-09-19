@@ -51,6 +51,8 @@ void MyStrategy::UpdateState() {
     EnemyGoalie = nullptr;
     SelfGoalie = nullptr;
     Partner = nullptr;
+    PuckHockeist = nullptr;
+    Puck = &World->getPuck();
     for (const Hockeyist& h: World->getHockeyists()) {
         if (h.getType() == GOALIE) {
             if (h.isTeammate()) {
@@ -61,8 +63,11 @@ void MyStrategy::UpdateState() {
         } else if (h.isTeammate() && h.getId() != Self->getId()) {
             Partner = &h;
         }
+        if (h.getId() == Puck->getOwnerHockeyistId()) {
+            PuckHockeist = &h;
+        }
     }
-    Puck = &World->getPuck();
+
     HavePuck = Puck->getOwnerHockeyistId() == Self->getId();
 
     if (EnemyGateX == uint16_t(-1)) {
@@ -155,7 +160,14 @@ void MyStrategy::MoveToDefence() {
 
     double puckAngle = GetAngle(Self->getX(), Self->getY(), Puck->getX(), Puck->getY());
 
-    if (Distance(SelfGateX, FieldCenterY, Puck->getX(), Puck->getY()) > 400) {
+    double puckDistance = Distance(SelfGateX, FieldCenterY, Puck->getX(), Puck->getY());
+
+
+    if (Puck->getOwnerPlayerId() != Self->getPlayerId() &&
+            (puckDistance < 500))
+    {
+        MoveToPuck();
+    } else {
         if (defenceDistance > 70) {
             double defenceAngle = GetAngle(Self->getX(), Self->getY(), defencePosX, defencePosY);
             double minAngle = GetAngle(Self->getAngle(), defenceAngle);
@@ -185,8 +197,6 @@ void MyStrategy::MoveToDefence() {
             double minAngle = GetAngle(Self->getAngle(), puckAngle);
             Move->setTurn(minAngle);
         }
-    } else {
-        MoveToPuck();
     }
 }
 
